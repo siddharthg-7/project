@@ -10,8 +10,8 @@ This project is a full-stack React + Express application for smart home planning
 
 ## Setup
 1. Install dependencies: npm install
-2. Start the backend: npm run backend
-3. Start the frontend: npm run dev
+2. Start the frontend: npm run dev
+3. (Optional) Start the backend for API testing: npm run backend
 4. Open http://localhost:5173
 
 ## API routes
@@ -21,6 +21,9 @@ This project is a full-stack React + Express application for smart home planning
 - POST /api/plans
 - GET /api/plans
 - POST /api/analyze
+
+## Vercel deployment
+The app is configured as a single-page React app with a Vercel fallback route, so direct visits to `/planner` and `/analysis` resolve correctly after deploy.
 
 ## Database
 Import the MySQL schema from backend/schema.sql into a local MySQL server if you want to wire the app to a real database.

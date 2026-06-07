@@ -1,31 +1,56 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getMockSession, setMockSession } from '../utils/planner';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState('login');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
-    const endpoint = mode === 'register' ? '/api/auth/register' : '/api/auth/login';
     const payload = {
-      email: event.target.email.value,
+      email: event.target.email.value.trim(),
       password: event.target.password.value,
-      name: mode === 'register' ? event.target.name.value : undefined,
+      name: mode === 'register' ? event.target.name.value.trim() : undefined,
     };
+    const session = getMockSession() || { users: [] };
+    const users = session.users || [];
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    setMessage(data.message || 'Authentication complete');
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      navigate('/planner');
+    if (!payload.email || !payload.password) {
+      setMessage('Email and password are required.');
+      return;
     }
+
+    if (mode === 'register') {
+      if (users.some((user) => user.email === payload.email)) {
+        setMessage('User already exists.');
+        return;
+      }
+
+      const nextUser = {
+        id: users.length + 1,
+        email: payload.email,
+        name: payload.name || 'User',
+        password: payload.password,
+      };
+      setMockSession({ users: [...users, nextUser], currentUser: nextUser });
+      localStorage.setItem('token', 'mock-token');
+      setMessage('User registered successfully.');
+      navigate('/planner');
+      return;
+    }
+
+    const user = users.find((item) => item.email === payload.email && item.password === payload.password);
+    if (!user) {
+      setMessage('Invalid email or password.');
+      return;
+    }
+
+    setMockSession({ users, currentUser: user });
+    localStorage.setItem('token', 'mock-token');
+    setMessage('Login successful.');
+    navigate('/planner');
   };
 
   return (
@@ -44,8 +69,8 @@ export default function LoginPage() {
 
         <section className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl shadow-cyan-500/10 backdrop-blur">
           <div className="flex gap-2 rounded-xl bg-slate-950/80 p-1">
-            <button className={mode === 'login' ? 'rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-950' : 'rounded-xl px-4 py-2 text-slate-300'} onClick={() => setMode('login')}>Login</button>
-            <button className={mode === 'register' ? 'rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-950' : 'rounded-xl px-4 py-2 text-slate-300'} onClick={() => setMode('register')}>Register</button>
+            <button type="button" className={mode === 'login' ? 'rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-950' : 'rounded-xl px-4 py-2 text-slate-300'} onClick={() => setMode('login')}>Login</button>
+            <button type="button" className={mode === 'register' ? 'rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-950' : 'rounded-xl px-4 py-2 text-slate-300'} onClick={() => setMode('register')}>Register</button>
           </div>
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === 'register' && <input name="name" className="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white" placeholder="Full name" />}

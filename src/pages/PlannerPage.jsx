@@ -1,33 +1,15 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-
-const defaultForm = {
-  propertyType: 'Independent House',
-  plotSize: '40x60',
-  plotShape: 'Rectangular',
-  facing: 'East',
-  floors: '2',
-  rooms: '3',
-  houseType: '3BHK',
-  apartmentType: '2BHK',
-  parkingCars: 2,
-  parkingBikes: 3,
-  parkingEv: 1,
-};
+import { analyzePlan, DEFAULT_FORM, saveJson } from '../utils/planner';
 
 export default function PlannerPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState(defaultForm);
+  const [form, setForm] = useState(DEFAULT_FORM);
 
-  const handleGenerate = async () => {
-    const response = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-    const data = await response.json();
-    localStorage.setItem('analysis', JSON.stringify(data));
-    localStorage.setItem('plannerForm', JSON.stringify(form));
+  const handleGenerate = () => {
+    const data = analyzePlan(form);
+    saveJson('analysis', data);
+    saveJson('plannerForm', form);
     navigate('/analysis');
   };
 
