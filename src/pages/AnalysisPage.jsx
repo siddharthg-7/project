@@ -11,12 +11,25 @@ export default function AnalysisPage() {
   const roomCards = analysis?.roomDiagram || [];
   const plotLabel = `${form.plotSize || '40x60 yards'} plot • ${form.facing || 'East'} facing • ${form.floors || '2'} floors`;
 
-  const askAi = (event) => {
+  const askAi = async (event) => {
     event.preventDefault();
     if (!question.trim()) return;
 
-    const currentAnalysis = analysis || {};
-    setAnswer(answerQuestion(question, form, currentAnalysis));
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, ...form })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAnswer(data.answer);
+      } else {
+        setAnswer('Error analyzing request.');
+      }
+    } catch (err) {
+      setAnswer('Network error: ' + err.message);
+    }
   };
 
   return (

@@ -7,50 +7,52 @@ export default function LoginPage() {
   const [mode, setMode] = useState('login');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const payload = {
       email: event.target.email.value.trim(),
       password: event.target.password.value,
       name: mode === 'register' ? event.target.name.value.trim() : undefined,
     };
-    const session = getMockSession() || { users: [] };
-    const users = session.users || [];
 
     if (!payload.email || !payload.password) {
       setMessage('Email and password are required.');
       return;
     }
 
-    if (mode === 'register') {
-      if (users.some((user) => user.email === payload.email)) {
-        setMessage('User already exists.');
-        return;
+    try {
+      if (mode === 'register') {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setMessage(data.message || 'Registration failed');
+          return;
+        }
+        localStorage.setItem('token', data.token);
+        setMessage(data.message);
+        navigate('/planner');
+      } else {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: payload.email, password: payload.password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setMessage(data.message || 'Login failed');
+          return;
+        }
+        localStorage.setItem('token', data.token);
+        setMessage(data.message);
+        navigate('/planner');
       }
-
-      const nextUser = {
-        id: users.length + 1,
-        email: payload.email,
-        name: payload.name || 'User',
-        password: payload.password,
-      };
-      setMockSession({ users: [...users, nextUser], currentUser: nextUser });
-      localStorage.setItem('token', 'mock-token');
-      setMessage('User registered successfully.');
-      navigate('/planner');
-      return;
+    } catch (err) {
+      setMessage('Network error: ' + err.message);
     }
-
-    const user = users.find((item) => item.email === payload.email && item.password === payload.password);
-    if (!user) {
-      setMessage('Invalid email or password.');
-      return;
-    }
-
-    setMockSession({ users, currentUser: user });
-    localStorage.setItem('token', 'mock-token');
-    setMessage('Login successful.');
-    navigate('/planner');
   };
 
   return (

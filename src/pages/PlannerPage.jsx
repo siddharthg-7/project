@@ -6,11 +6,24 @@ export default function PlannerPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(DEFAULT_FORM);
 
-  const handleGenerate = () => {
-    const data = analyzePlan(form);
-    saveJson('analysis', data);
-    saveJson('plannerForm', form);
-    navigate('/analysis');
+  const handleGenerate = async () => {
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        saveJson('analysis', data);
+        saveJson('plannerForm', form);
+        navigate('/analysis');
+      } else {
+        console.error('Failed to generate analysis');
+      }
+    } catch (error) {
+      console.error('Error generating analysis:', error);
+    }
   };
 
   return (

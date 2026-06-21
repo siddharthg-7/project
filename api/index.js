@@ -72,3 +72,5 @@ if (!process.env.VERCEL) {
     console.log(`Smart home backend listening on http://localhost:${port}`);
   });
 }
+
+export default app;
